@@ -4,36 +4,34 @@
 
 @layer base {
   :root {
-    /* Premium dark spa palette */
-    --background: 265 40% 6%;
-    --foreground: 40 30% 96%;
-    --card: 265 30% 10%;
-    --card-foreground: 40 30% 96%;
-    --primary: 330 70% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 265 25% 16%;
-    --secondary-foreground: 40 30% 96%;
-    --muted: 265 20% 18%;
-    --muted-foreground: 270 12% 68%;
-    --destructive: 0 72% 56%;
+    --background: 240 8% 4%;
+    --foreground: 240 5% 93%;
+    --card: 240 7% 7%;
+    --card-foreground: 240 5% 93%;
+    --primary: 258 80% 72%;
+    --primary-foreground: 240 8% 4%;
+    --secondary: 240 6% 11%;
+    --secondary-foreground: 240 5% 75%;
+    --muted: 240 5% 13%;
+    --muted-foreground: 240 4% 46%;
+    --destructive: 0 65% 58%;
     --destructive-foreground: 0 0% 100%;
-    --border: 270 25% 20%;
-    --input: 270 25% 20%;
-    --ring: 330 70% 60%;
-    --radius: 1rem;
+    --border: 240 5% 13%;
+    --input: 240 5% 13%;
+    --ring: 258 80% 72%;
+    --radius: 0.5rem;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+  * { @apply border-border; }
+
+  html { -webkit-font-smoothing: antialiased; }
+
   body {
     @apply text-foreground;
     background:
-      radial-gradient(1200px 600px at 15% -10%, hsl(330 60% 22% / 0.55), transparent 60%),
-      radial-gradient(1000px 500px at 100% 0%, hsl(265 70% 30% / 0.45), transparent 55%),
-      radial-gradient(800px 800px at 50% 120%, hsl(280 60% 18% / 0.5), transparent 60%),
+      radial-gradient(ellipse 80% 50% at 50% -10%, hsl(258 60% 12% / 0.6) 0%, transparent 60%),
       hsl(var(--background));
     background-attachment: fixed;
     min-height: 100vh;
@@ -41,21 +39,27 @@
 }
 
 @layer components {
-  /* Frosted-glass surface used across panels for the premium look */
-  .glass {
-    @apply rounded-2xl border border-white/10 bg-white/[0.04] shadow-2xl backdrop-blur-xl;
+  .surface {
+    @apply rounded-lg border border-border bg-card;
   }
-  .glass-hover {
-    @apply transition-colors hover:bg-white/[0.07];
+
+  .surface-accent {
+    @apply rounded-lg border bg-card;
+    border-color: hsl(258 80% 72% / 0.25);
+    box-shadow: 0 0 0 1px hsl(258 80% 72% / 0.06) inset;
+  }
+
+  .surface-warn {
+    @apply rounded-lg border bg-card;
+    border-color: hsl(38 80% 58% / 0.35);
+  }
+
+  .label {
+    @apply font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground;
   }
 }
 
-/* Premium scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-thumb {
-  background: hsl(270 20% 30%);
-  border-radius: 9999px;
-}
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply rounded-full bg-border; }
+::-webkit-scrollbar-thumb:hover { background: hsl(258 80% 72% / 0.4); }

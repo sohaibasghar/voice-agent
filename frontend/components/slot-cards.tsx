@@ -4,18 +4,13 @@ import { useEffect, useState } from 'react';
 import type { BookingView, Slot, TraceEvent } from 'voice-agent-shared';
 import { voiceClient } from '@/lib/voice-client';
 
-function fmt(iso: string): string {
+function fmt(iso: string) {
   return new Date(iso).toLocaleString(undefined, {
-    weekday: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
+    weekday: 'short', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
   });
 }
 
-/**
- * Visual mirror of the conversation (US1): the slots the agent offered and the
- * booking it confirmed, derived from forwarded checkAvailability / bookSlot events.
- */
 export function SlotCards() {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [booking, setBooking] = useState<BookingView | null>(null);
@@ -26,10 +21,7 @@ export function SlotCards() {
         const r = e.result as { slots?: Slot[] };
         if (r?.slots) setSlots(r.slots.slice(0, 6));
       }
-      if (
-        e.type === 'tool_result' &&
-        (e.name === 'bookSlot' || e.name === 'rescheduleBooking')
-      ) {
+      if (e.type === 'tool_result' && (e.name === 'bookSlot' || e.name === 'rescheduleBooking')) {
         const r = e.result as { booking?: BookingView };
         if (r?.booking) setBooking(r.booking);
       }
@@ -38,43 +30,40 @@ export function SlotCards() {
     return voiceClient.on('event', apply);
   }, []);
 
-  if (slots.length === 0 && !booking) return null;
+  if (!slots.length && !booking) return null;
 
   return (
-    <div className="glass p-6">
-      <h3 className="mb-3 font-display text-lg font-semibold">Booking</h3>
-      <div className="space-y-3">
-        {booking && (
-          <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-3 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-emerald-500/80 px-2 py-0.5 text-[11px] font-semibold text-white">
-                {booking.status}
+    <div className="surface overflow-hidden">
+      {booking && (
+        <div className="border-b border-border p-5">
+          <div className="label mb-2">Confirmed booking</div>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-display text-xl font-semibold text-foreground">{booking.serviceName}</p>
+              <p className="mt-0.5 font-mono text-sm text-primary">{fmt(booking.startTime)}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">{booking.customerName} · {booking.contact}</p>
+            </div>
+            <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 font-mono text-[10px] font-medium uppercase tracking-wide text-emerald-400">
+              {booking.status}
+            </span>
+          </div>
+        </div>
+      )}
+      {slots.length > 0 && (
+        <div className="p-5">
+          <div className="label mb-3">Available slots</div>
+          <div className="flex flex-wrap gap-2">
+            {slots.map((s) => (
+              <span
+                key={s.startTime}
+                className="rounded border border-border bg-secondary px-3 py-1.5 font-mono text-[11px] text-muted-foreground hover:border-primary/30 hover:text-primary transition-colors"
+              >
+                {fmt(s.startTime)}
               </span>
-              <span className="font-medium text-white/90">{booking.serviceName}</span>
-            </div>
-            <p className="mt-1 text-white/70">
-              {fmt(booking.startTime)} · {booking.customerName} · {booking.contact}
-            </p>
+            ))}
           </div>
-        )}
-        {slots.length > 0 && (
-          <div>
-            <p className="mb-2 text-xs uppercase tracking-wide text-white/40">
-              Offered slots
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {slots.map((s) => (
-                <span
-                  key={s.startTime}
-                  className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-sm text-white/80"
-                >
-                  {fmt(s.startTime)}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

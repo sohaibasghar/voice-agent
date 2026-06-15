@@ -7,15 +7,10 @@ import { Ringback } from '@/lib/ringtone';
 import { agentMeta } from '@/lib/agents-meta';
 import { cn } from '@/lib/utils';
 
-const BUSINESS_NAME = 'Bloom Salon & Spa';
-
 function useCallTimer(active: boolean): string {
   const [secs, setSecs] = useState(0);
   useEffect(() => {
-    if (!active) {
-      setSecs(0);
-      return;
-    }
+    if (!active) { setSecs(0); return; }
     const id = setInterval(() => setSecs((s) => s + 1), 1000);
     return () => clearInterval(id);
   }, [active]);
@@ -24,11 +19,6 @@ function useCallTimer(active: boolean): string {
   return `${mm}:${ss}`;
 }
 
-/**
- * Premium phone-call experience for the realtime voice session: dial → ringing →
- * live call, with a call timer, talking/barge-in indicator, mute, hang-up, and a
- * real-time handoff display that shows which specialist is currently on the line.
- */
 export function PhoneCall() {
   const [status, setStatus] = useState<VoiceStatus>('idle');
   const [muted, setMuted] = useState(false);
@@ -52,43 +42,25 @@ export function PhoneCall() {
     const offAgent = voiceClient.on('agent', (name) => {
       setAgent((prev) => {
         if (name !== prev) {
-          // Brief "transferring" flourish on a real handoff.
           setTransferTo(agentMeta(name).label);
-          setTimeout(() => setTransferTo(null), 1800);
+          setTimeout(() => setTransferTo(null), 2000);
         }
         return name;
       });
     });
-    return () => {
-      offStatus();
-      offInt();
-      offAgent();
-    };
+    return () => { offStatus(); offInt(); offAgent(); };
   }, []);
 
   useEffect(() => {
-    if (dialing) {
-      ringback.current = new Ringback();
-      ringback.current.start();
-    } else {
-      ringback.current?.stop();
-      ringback.current = null;
-    }
-    return () => {
-      ringback.current?.stop();
-      ringback.current = null;
-    };
+    if (dialing) { ringback.current = new Ringback(); ringback.current.start(); }
+    else { ringback.current?.stop(); ringback.current = null; }
+    return () => { ringback.current?.stop(); ringback.current = null; };
   }, [dialing]);
 
   const call = useCallback(async () => {
-    setError(null);
-    setMuted(false);
-    setAgent('FrontDeskAgent');
-    try {
-      await voiceClient.start();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Call failed');
-    }
+    setError(null); setMuted(false); setAgent('FrontDeskAgent');
+    try { await voiceClient.start(); }
+    catch (e) { setError(e instanceof Error ? e.message : 'Call failed'); }
   }, []);
 
   const hangup = useCallback(() => voiceClient.stop(), []);
@@ -98,129 +70,125 @@ export function PhoneCall() {
     setMuted(next);
   }, []);
 
-  const statusLine = error
-    ? error
-    : dialing
-      ? 'Calling…'
-      : connected
-        ? `In call · ${timer}`
-        : status === 'error'
-          ? 'Call failed'
-          : 'Tap to call the front desk';
-
   return (
-    <div className="glass relative overflow-hidden px-8 py-12">
-      {/* ambient glow */}
+    <div className="surface-accent relative flex flex-col items-center overflow-hidden px-6 py-8 text-center">
+      {/* Subtle glow behind avatar */}
       <div
         className={cn(
-          'pointer-events-none absolute -top-24 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-gradient-to-br opacity-30 blur-3xl transition-all duration-700',
-          meta.accent,
+          'pointer-events-none absolute inset-x-0 top-0 h-40 opacity-0 transition-opacity duration-700 blur-3xl',
+          connected && 'opacity-30',
         )}
+        style={{ background: 'radial-gradient(ellipse at 50% 0%, hsl(258 80% 55%), transparent 70%)' }}
       />
 
-      <div className="relative flex flex-col items-center gap-7">
-        {/* Avatar with ringing / speaking halo */}
-        <div className="relative flex h-32 w-32 items-center justify-center">
-          {(dialing || (connected && speaking)) && (
-            <>
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/20" />
-              <span className="absolute inline-flex h-[118%] w-[118%] animate-ping rounded-full bg-white/10 [animation-delay:300ms]" />
-            </>
-          )}
-          <div
-            className={cn(
-              'relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br text-4xl shadow-xl transition-all duration-500',
-              meta.accent,
-              connected && `ring-4 ${meta.ring}`,
-            )}
-          >
-            {meta.emoji}
-          </div>
-        </div>
+      {/* Label */}
+      <div className="label mb-6 w-full text-left">Voice Session</div>
 
-        {/* Active agent / business */}
-        <div className="text-center">
-          <h2 className="font-display text-2xl font-semibold tracking-tight">
-            {BUSINESS_NAME}
-          </h2>
-          <div className="mt-1 flex flex-col items-center gap-1">
-            {connected ? (
-              <span className="text-sm font-medium text-white/90">
-                {meta.label} <span className="text-white/40">·</span>{' '}
-                <span className="text-white/55">{meta.role}</span>
-              </span>
-            ) : null}
-            <p
-              className={cn(
-                'text-sm',
-                error || status === 'error' ? 'text-red-400' : 'text-white/55',
-                connected && 'tabular-nums text-emerald-300/90',
-              )}
-            >
-              {statusLine}
-              {connected && muted ? ' · muted' : ''}
-              {connected && speaking ? ' · listening' : ''}
-            </p>
-          </div>
+      {/* Avatar */}
+      <div className="relative mb-5">
+        {(dialing || (connected && speaking)) && (
+          <>
+            <span className="absolute inset-0 -m-2 animate-ping rounded-full border border-primary/30" />
+            <span className="absolute inset-0 -m-5 animate-ping rounded-full border border-primary/15 [animation-delay:300ms]" />
+          </>
+        )}
+        <div
+          className={cn(
+            'flex h-20 w-20 items-center justify-center rounded-full border-2 text-3xl transition-all duration-500',
+            connected
+              ? 'border-primary/50 bg-primary/10 shadow-[0_0_24px_hsl(258_80%_72%/0.2)]'
+              : 'border-border bg-secondary',
+          )}
+        >
+          {meta.emoji}
         </div>
+        {connected && (
+          <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-card bg-emerald-500">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-200" />
+          </span>
+        )}
+      </div>
 
-        {/* Controls */}
-        <div className="mt-1 flex items-center gap-6">
-          {!connected && !dialing && (
-            <button
-              onClick={call}
-              aria-label="Call"
-              className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-400 active:scale-95"
-            >
-              <Phone className="h-7 w-7" />
-            </button>
+      {/* Agent + status */}
+      <div className="mb-6">
+        <h2 className="font-display text-2xl font-semibold text-foreground">
+          Bloom Salon &amp; Spa
+        </h2>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          {connected ? `${meta.label} · ${meta.role}` : 'Front Desk · Bookings & scheduling'}
+        </p>
+        <p
+          className={cn(
+            'mt-2 font-mono text-sm tabular-nums',
+            error || status === 'error' ? 'text-destructive' : '',
+            connected && !error ? 'text-primary' : '',
+            !connected && !error ? 'text-muted-foreground' : '',
           )}
-          {dialing && (
-            <button
-              onClick={hangup}
-              aria-label="Cancel call"
-              className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition hover:bg-red-400 active:scale-95"
-            >
-              <PhoneOff className="h-7 w-7 animate-pulse" />
-            </button>
+        >
+          {error ?? (
+            dialing ? 'Connecting…' :
+            connected ? `${timer}${muted ? ' · MUTED' : ''}${speaking ? ' · LISTENING' : ''}` :
+            'Ready'
           )}
-          {connected && (
-            <>
-              <button
-                onClick={toggleMute}
-                aria-label={muted ? 'Unmute' : 'Mute'}
-                className={cn(
-                  'flex h-14 w-14 items-center justify-center rounded-full transition active:scale-95',
-                  muted
-                    ? 'bg-amber-500 text-white'
-                    : 'bg-white/10 text-white hover:bg-white/20',
-                )}
-              >
-                {muted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
-              </button>
-              <button
-                onClick={hangup}
-                aria-label="Hang up"
-                className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500 text-white shadow-lg shadow-red-500/30 transition hover:bg-red-400 active:scale-95"
-              >
-                <PhoneOff className="h-7 w-7" />
-              </button>
-            </>
-          )}
-        </div>
-
-        <p className="max-w-xs text-center text-xs text-white/40">
-          Allow the microphone, then speak naturally — e.g. “I&apos;d like a haircut
-          Thursday afternoon.” Interrupt any time. Cancel/reschedule pauses for your
-          approval.
         </p>
       </div>
 
-      {/* Real-time handoff toast */}
+      {/* Controls */}
+      <div className="flex items-center gap-3">
+        {!connected && !dialing && (
+          <button
+            onClick={call}
+            className="flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-95"
+          >
+            <Phone className="h-4 w-4" />
+            Call front desk
+          </button>
+        )}
+        {dialing && (
+          <button
+            onClick={hangup}
+            className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-5 py-2.5 text-sm font-medium text-destructive transition hover:bg-destructive/15 active:scale-95"
+          >
+            <PhoneOff className="h-4 w-4 animate-pulse" />
+            Cancel
+          </button>
+        )}
+        {connected && (
+          <>
+            <button
+              onClick={toggleMute}
+              aria-label={muted ? 'Unmute' : 'Mute'}
+              className={cn(
+                'flex h-10 w-10 items-center justify-center rounded-md border text-sm transition active:scale-95',
+                muted
+                  ? 'border-amber-500/40 bg-amber-500/15 text-amber-400'
+                  : 'border-border bg-secondary text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {muted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            </button>
+            <button
+              onClick={hangup}
+              className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-5 py-2.5 text-sm font-medium text-destructive transition hover:bg-destructive/15 active:scale-95"
+            >
+              <PhoneOff className="h-4 w-4" />
+              End call
+            </button>
+          </>
+        )}
+      </div>
+
+      {!connected && !dialing && (
+        <p className="mt-4 max-w-[22ch] text-xs leading-relaxed text-muted-foreground/60">
+          Allow mic access, then speak naturally. Cancel/reschedule requires approval.
+        </p>
+      )}
+
+      {/* Handoff toast */}
       {transferTo && (
-        <div className="absolute inset-x-0 bottom-4 flex justify-center">
-          <div className="animate-in fade-in slide-in-from-bottom-2 rounded-full border border-white/15 bg-black/50 px-4 py-2 text-xs font-medium text-white/90 backdrop-blur">
-            Transferring you to {transferTo}…
+        <div className="animate-in fade-in slide-in-from-bottom-2 absolute inset-x-4 bottom-4 flex justify-center">
+          <div className="rounded-md border border-primary/30 bg-card px-4 py-2 text-xs font-medium text-primary shadow-lg">
+            Transferring to {transferTo}…
           </div>
         </div>
       )}
