@@ -11,7 +11,7 @@ import {
   LookupServicesInput,
   RescheduleBookingInput,
   SendConfirmationInput,
-} from '@voice-agent/shared';
+} from 'voice-agent-shared';
 import { AvailabilityService } from '../tools/availability.service';
 import { BookingService } from '../tools/booking.service';
 import { CallbackService } from '../tools/callback.service';

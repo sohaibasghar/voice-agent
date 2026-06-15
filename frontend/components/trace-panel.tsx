@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { TraceEvent } from '@voice-agent/shared';
+import type { TraceEvent } from 'voice-agent-shared';
 import { voiceClient } from '@/lib/voice-client';
 import { cn } from '@/lib/utils';
 

@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { FaqService } from './faq.service';
-import type { ServiceInfo } from '@voice-agent/shared';
+import type { ServiceInfo } from 'voice-agent-shared';
 
 /** GET /services — full grouped catalog for the premium services menu UI. */
 @Controller('services')

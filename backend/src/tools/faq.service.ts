@@ -5,7 +5,7 @@ import type {
   LookupFaqOutput,
   LookupServicesInput,
   LookupServicesOutput,
-} from '@voice-agent/shared';
+} from 'voice-agent-shared';
 
 /**
  * Grounded FAQ + services lookups (FR-010, FR-011). Returns only stored data;

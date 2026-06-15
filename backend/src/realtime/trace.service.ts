@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { RelayEvent, TraceEvent } from '@voice-agent/shared';
+import type { RelayEvent, TraceEvent } from 'voice-agent-shared';
 
 /**
  * Assembles a per-session, ordered trace from relayed browser events

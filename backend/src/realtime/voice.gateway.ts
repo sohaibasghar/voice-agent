@@ -14,7 +14,7 @@ import {
   type RealtimeAgent,
 } from '@openai/agents-realtime';
 import type { RunToolApprovalItem } from '@openai/agents-core';
-import type { RelayEvent, TraceEventType } from '@voice-agent/shared';
+import type { RelayEvent, TraceEventType } from 'voice-agent-shared';
 import { VoiceAgentsService } from './voice-agents.service';
 import { TraceService } from './trace.service';
 

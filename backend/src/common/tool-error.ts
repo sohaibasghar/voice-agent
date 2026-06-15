@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import type { ToolErrorCode } from '@voice-agent/shared';
+import type { ToolErrorCode } from 'voice-agent-shared';
 
 /**
  * Domain error raised by tool providers when an authoritative guardrail or

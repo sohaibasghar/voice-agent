@@ -8,7 +8,7 @@ import type {
   CheckAvailabilityOutput,
   PartOfDay,
   Slot,
-} from '@voice-agent/shared';
+} from 'voice-agent-shared';
 
 const PART_OF_DAY_RANGES: Record<PartOfDay, [number, number]> = {
   morning: [0, 12 * 60],

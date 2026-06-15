@@ -1,6 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { OpenAIService } from './openai.service';
-import type { SessionTokenOutput } from '@voice-agent/shared';
+import type { SessionTokenOutput } from 'voice-agent-shared';
 
 /** POST /session — mints an ephemeral realtime token for the browser. */
 @Controller('session')

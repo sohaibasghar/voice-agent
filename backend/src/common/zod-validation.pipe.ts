@@ -4,7 +4,7 @@ import type { ZodType } from 'zod';
 /**
  * Validates a request body against a shared Zod schema. Used per-route on the
  * tool endpoints so every tool input is validated against the single source of
- * truth in @voice-agent/shared.
+ * truth in voice-agent-shared.
  */
 export class ZodBody<T> implements PipeTransform {
   constructor(private readonly schema: ZodType<T>) {}

@@ -4,7 +4,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { SessionTokenOutput } from '@voice-agent/shared';
+import type { SessionTokenOutput } from 'voice-agent-shared';
 
 const CLIENT_SECRETS_URL = 'https://api.openai.com/v1/realtime/client_secrets';
 

@@ -9,8 +9,6 @@
     "test",
     "dist",
     "prisma",
-    "frontend",
-    "shared",
     "**/*spec.ts"
   ]
 }

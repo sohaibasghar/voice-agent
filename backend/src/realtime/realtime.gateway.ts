@@ -7,7 +7,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import type { Server, Socket } from 'socket.io';
-import { RelayEventSchema, type RelayEvent } from '@voice-agent/shared';
+import { RelayEventSchema, type RelayEvent } from 'voice-agent-shared';
 import { TraceService } from './trace.service';
 
 /**

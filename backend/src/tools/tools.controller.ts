@@ -15,7 +15,7 @@ import {
   LookupServicesInput,
   RescheduleBookingInput,
   SendConfirmationInput,
-} from '@voice-agent/shared';
+} from 'voice-agent-shared';
 import type {
   BookSlotInput as TBookSlotInput,
   CancelBookingInput as TCancelBookingInput,
@@ -26,7 +26,7 @@ import type {
   LookupServicesInput as TLookupServicesInput,
   RescheduleBookingInput as TRescheduleBookingInput,
   SendConfirmationInput as TSendConfirmationInput,
-} from '@voice-agent/shared';
+} from 'voice-agent-shared';
 
 /**
  * POST /tools/* — authoritative tool endpoints. Each validates its body against

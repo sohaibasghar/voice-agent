@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { ServiceInfo } from '@voice-agent/shared';
+import type { ServiceInfo } from 'voice-agent-shared';
 import { BACKEND_URL } from '@/lib/config';
 
 interface Category {

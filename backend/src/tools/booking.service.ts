@@ -12,7 +12,7 @@ import type {
   LookupBookingOutput,
   RescheduleBookingInput,
   RescheduleBookingOutput,
-} from '@voice-agent/shared';
+} from 'voice-agent-shared';
 
 /**
  * Booking operations with authoritative guardrails (Constitution III):

@@ -1,5 +1,5 @@
 import { PrismaService } from '../prisma/prisma.service';
-import type { BookingView } from '@voice-agent/shared';
+import type { BookingView } from 'voice-agent-shared';
 
 /** Case-insensitive service lookup by name (small catalog → match in memory). */
 export async function findServiceByName(prisma: PrismaService, name: string) {

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import type { LogCallbackInput, LogCallbackOutput } from '@voice-agent/shared';
+import type { LogCallbackInput, LogCallbackOutput } from 'voice-agent-shared';
 
 /** logCallback (FR-013a) — escalation: record a human-follow-up request. */
 @Injectable()

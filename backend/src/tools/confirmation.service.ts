@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import type {
   SendConfirmationInput,
   SendConfirmationOutput,
-} from '@voice-agent/shared';
+} from 'voice-agent-shared';
 
 /**
  * sendConfirmation (FR-014) — v1 mocks a WhatsApp/SMS send by logging it.

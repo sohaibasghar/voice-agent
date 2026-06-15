@@ -1,7 +1,7 @@
 'use client';
 
 import { io, type Socket } from 'socket.io-client';
-import type { TraceEvent } from '@voice-agent/shared';
+import type { TraceEvent } from 'voice-agent-shared';
 import { BACKEND_URL, newSessionId } from '@/lib/config';
 import { AudioEngine } from '@/lib/audio';
 import { HoldMusic } from '@/lib/holdmusic';

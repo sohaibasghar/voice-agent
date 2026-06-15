@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { BookingView, Slot, TraceEvent } from '@voice-agent/shared';
+import type { BookingView, Slot, TraceEvent } from 'voice-agent-shared';
 import { voiceClient } from '@/lib/voice-client';
 
 function fmt(iso: string): string {
