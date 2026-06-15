@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { SEED_FAQS, SEED_SERVICES, seedBookings } from './seed.data';
+import { DOMAIN_CONFIG, type DomainConfig } from '../domain/domain.config';
 
 export interface SeedResult {
   ok: true;
@@ -12,24 +12,28 @@ export interface SeedResult {
 export class SeedService {
   private readonly logger = new Logger(SeedService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(DOMAIN_CONFIG) private readonly domain: DomainConfig,
+  ) {}
 
   async reset(): Promise<SeedResult> {
+    const { services, faqs, bookings } = this.domain.seed;
+
     // Clear in FK-safe order.
     await this.prisma.booking.deleteMany();
     await this.prisma.callbackRequest.deleteMany();
     await this.prisma.service.deleteMany();
     await this.prisma.fAQ.deleteMany();
 
-    for (const s of SEED_SERVICES)
-      await this.prisma.service.create({ data: s });
-    for (const f of SEED_FAQS) await this.prisma.fAQ.create({ data: f });
+    for (const s of services) await this.prisma.service.create({ data: s });
+    for (const f of faqs) await this.prisma.fAQ.create({ data: f });
 
     const byName = new Map(
       (await this.prisma.service.findMany()).map((s) => [s.name, s]),
     );
-    const bookings = seedBookings();
-    for (const b of bookings) {
+
+    for (const b of bookings()) {
       const service = byName.get(b.serviceName);
       if (!service) continue;
       await this.prisma.booking.create({

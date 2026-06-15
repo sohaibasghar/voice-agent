@@ -1,8 +1,9 @@
-/* Standalone seed runner: `npm run seed`. Mirrors SeedService.reset() without Nest. */
+/* Standalone seed runner: `npm run db:seed`. Mirrors SeedService.reset() without Nest. */
 import { PrismaClient } from '@prisma/client';
-import { SEED_FAQS, SEED_SERVICES, seedBookings } from '../src/seed/seed.data';
+import { BEAUTY_SALON_PRESET } from '../src/domain/presets/beauty-salon.preset';
 
 const prisma = new PrismaClient();
+const { services, faqs, bookings } = BEAUTY_SALON_PRESET.seed;
 
 async function main() {
   await prisma.booking.deleteMany();
@@ -10,13 +11,13 @@ async function main() {
   await prisma.service.deleteMany();
   await prisma.fAQ.deleteMany();
 
-  for (const s of SEED_SERVICES) await prisma.service.create({ data: s });
-  for (const f of SEED_FAQS) await prisma.fAQ.create({ data: f });
+  for (const s of services) await prisma.service.create({ data: s });
+  for (const f of faqs) await prisma.fAQ.create({ data: f });
 
   const byName = new Map(
     (await prisma.service.findMany()).map((s) => [s.name, s]),
   );
-  for (const b of seedBookings()) {
+  for (const b of bookings()) {
     const service = byName.get(b.serviceName);
     if (!service) continue;
     await prisma.booking.create({

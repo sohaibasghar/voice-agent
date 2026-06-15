@@ -1,4 +1,4 @@
-// Voice Front-Desk Agent — calendar store (SQLite via Prisma)
+// Voice Front-Desk Agent — calendar store (PostgreSQL via Prisma)
 // See specs/001-voice-front-desk-agent/data-model.md
 
 generator client {
@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

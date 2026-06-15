@@ -10,18 +10,28 @@
   ],
   "scripts": {
     "dev": "npm run shared:build && npm run backend:dev & npm run frontend:dev",
+    "build": "npm run backend:build && npm run frontend:build",
+    "start": "npm run backend:start",
 
     "shared:build": "npm run build -w voice-agent-shared",
 
-    "backend:dev": "npm run start:dev -w @voice-agent/backend",
-    "backend:build": "npm run shared:build && npm run build -w @voice-agent/backend",
-    "backend:start": "node backend/dist/main",
+    "backend:dev": "npm run -w @voice-agent/backend start:dev",
+    "backend:debug": "npm run -w @voice-agent/backend start:debug",
+    "backend:build": "npm run shared:build && npm run -w @voice-agent/backend build",
+    "backend:start": "npm run -w @voice-agent/backend start:prod",
+    "backend:test": "npm run -w @voice-agent/backend test",
+    "backend:lint": "npm run -w @voice-agent/backend lint",
 
-    "frontend:dev": "npm run dev -w @voice-agent/frontend",
-    "frontend:build": "npm run shared:build && npm run build -w @voice-agent/frontend",
+    "frontend:dev": "npm run -w @voice-agent/frontend dev",
+    "frontend:build": "npm run shared:build && npm run -w @voice-agent/frontend build",
+    "frontend:start": "npm run -w @voice-agent/frontend start",
+    "frontend:lint": "npm run -w @voice-agent/frontend lint",
 
-    "db:generate": "npm run prisma:generate -w @voice-agent/backend",
-    "db:migrate": "npm run prisma:migrate -w @voice-agent/backend",
-    "db:seed": "npm run seed -w @voice-agent/backend"
+    "db:generate": "npm run -w @voice-agent/backend db:generate",
+    "db:migrate": "npm run -w @voice-agent/backend db:migrate",
+    "db:migrate:prod": "npm run -w @voice-agent/backend db:migrate:prod",
+    "db:seed": "npm run -w @voice-agent/backend db:seed",
+    "db:studio": "npm run -w @voice-agent/backend db:studio",
+    "db:reset": "npm run -w @voice-agent/backend db:reset"
   }
 }
