@@ -13,6 +13,7 @@ datasource db {
 model Service {
   id          String    @id @default(cuid())
   name        String    @unique
+  category    String    @default("Other")
   durationMin Int
   price       Int // minor units (cents)
   bookings    Booking[]

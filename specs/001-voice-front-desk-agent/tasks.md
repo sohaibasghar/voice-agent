@@ -22,6 +22,22 @@ Remaining 9 unchecked:
 - T051 (optional server-side SDK trace spans), T053 (full live-voice walkthrough — needs a real
   `OPENAI_API_KEY` + mic), T055 (pre-recorded fallback screencast) — manual/optional follow-ups.
 
+**Topology re-architecture (2026-06-12, after initial impl)**: per user request, moved
+the OpenAI Agents SDK **server-side** (research.md D3 revised). NestJS now hosts the
+`RealtimeSession`, `RealtimeAgent`s, tools (native, no HTTP proxy), output guardrail,
+handoffs, and **human-in-the-loop tool approvals**; tracing is automatic (hosted
+dashboard). The browser became a thin audio+UI client. Net changes vs the task list:
+- Added (backend): `src/realtime/voice-agents.service.ts` (agents+tools+guardrail),
+  `src/realtime/voice.gateway.ts` (`/voice` Socket.IO: audio bridge, event relay,
+  approvals). Verified live: server-side session connects to OpenAI (`gpt-realtime-mini`).
+- Added (frontend): `lib/voice-client.ts`, `lib/audio.ts`, `public/capture-worklet.js`,
+  `components/approvals-panel.tsx` (human-in-the-loop UI).
+- Superseded T015/T016/T017/T024/T025/T027/T028/T035/T036/T037/T042–T047 browser-side SDK
+  files (removed) — their behaviour now lives in the server-side session + the thin client.
+- T011's `/session` ephemeral-token endpoint is no longer used by the client (server uses
+  the real key directly); kept harmlessly. Backend tool providers (T020–T023, T031–T034,
+  T039–T041) and `/tools/*` are reused unchanged by the server-side agents.
+
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: Can run in parallel (different files, no dependencies)

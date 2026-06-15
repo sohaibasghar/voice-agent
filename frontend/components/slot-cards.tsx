@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { BookingView, Slot, TraceEvent } from '@voice-agent/shared';
-import { traceRelay } from '@/lib/trace/relay';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { voiceClient } from '@/lib/voice-client';
 
 function fmt(iso: string): string {
   return new Date(iso).toLocaleString(undefined, {
@@ -16,7 +14,7 @@ function fmt(iso: string): string {
 
 /**
  * Visual mirror of the conversation (US1): the slots the agent offered and the
- * booking it confirmed, derived from relayed checkAvailability / bookSlot events.
+ * booking it confirmed, derived from forwarded checkAvailability / bookSlot events.
  */
 export function SlotCards() {
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -28,49 +26,55 @@ export function SlotCards() {
         const r = e.result as { slots?: Slot[] };
         if (r?.slots) setSlots(r.slots.slice(0, 6));
       }
-      if (e.type === 'tool_result' && (e.name === 'bookSlot' || e.name === 'rescheduleBooking')) {
+      if (
+        e.type === 'tool_result' &&
+        (e.name === 'bookSlot' || e.name === 'rescheduleBooking')
+      ) {
         const r = e.result as { booking?: BookingView };
         if (r?.booking) setBooking(r.booking);
       }
     };
-    traceRelay.events.forEach(apply);
-    return traceRelay.onEvent(apply);
+    voiceClient.events.forEach(apply);
+    return voiceClient.on('event', apply);
   }, []);
 
+  if (slots.length === 0 && !booking) return null;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Booking</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
+    <div className="glass p-6">
+      <h3 className="mb-3 font-display text-lg font-semibold">Booking</h3>
+      <div className="space-y-3">
         {booking && (
-          <div className="rounded-md border border-primary/40 bg-secondary p-3 text-sm">
+          <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-3 text-sm">
             <div className="flex items-center gap-2">
-              <Badge>{booking.status}</Badge>
-              <span className="font-medium">{booking.serviceName}</span>
+              <span className="rounded-full bg-emerald-500/80 px-2 py-0.5 text-[11px] font-semibold text-white">
+                {booking.status}
+              </span>
+              <span className="font-medium text-white/90">{booking.serviceName}</span>
             </div>
-            <p className="mt-1">
+            <p className="mt-1 text-white/70">
               {fmt(booking.startTime)} · {booking.customerName} · {booking.contact}
             </p>
           </div>
         )}
-        <div>
-          <p className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
-            Offered slots
-          </p>
-          {slots.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No slots offered yet.</p>
-          ) : (
+        {slots.length > 0 && (
+          <div>
+            <p className="mb-2 text-xs uppercase tracking-wide text-white/40">
+              Offered slots
+            </p>
             <div className="flex flex-wrap gap-2">
               {slots.map((s) => (
-                <Badge key={s.startTime} variant="outline">
+                <span
+                  key={s.startTime}
+                  className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-sm text-white/80"
+                >
                   {fmt(s.startTime)}
-                </Badge>
+                </span>
               ))}
             </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

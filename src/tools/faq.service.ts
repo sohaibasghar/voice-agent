@@ -36,14 +36,20 @@ export class FaqService {
   ): Promise<LookupServicesOutput> {
     const q = input.query.trim().toLowerCase();
     const all = await this.prisma.service.findMany();
-    // Empty query → list all; specific query → only matches (empty if none).
+    // Empty query → list all; otherwise match on name OR category so "spa",
+    // "makeup", "bridal", "groom" all work. Empty if no match.
     const matched = q
-      ? all.filter((s) => s.name.toLowerCase().includes(q))
+      ? all.filter(
+          (s) =>
+            s.name.toLowerCase().includes(q) ||
+            s.category.toLowerCase().includes(q),
+        )
       : all;
     const services = matched.map((s) => ({
       name: s.name,
       durationMin: s.durationMin,
       price: s.price,
+      category: s.category,
     }));
     return { services };
   }

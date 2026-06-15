@@ -1,11 +1,30 @@
 /** Demo seed data (FR-018, data-model.md). Prices in minor units (cents). */
 
 export const SEED_SERVICES = [
-  { name: 'Haircut', durationMin: 45, price: 4500 },
-  { name: 'Color', durationMin: 90, price: 12000 },
-  { name: 'Manicure', durationMin: 30, price: 3000 },
-  { name: 'Facial', durationMin: 60, price: 7000 },
-  { name: 'Bridal Package', durationMin: 180, price: 35000 },
+  // Hair
+  { name: 'Haircut', category: 'Hair', durationMin: 45, price: 4500 },
+  { name: 'Color', category: 'Hair', durationMin: 90, price: 12000 },
+  { name: 'Cut & Color Combo', category: 'Hair', durationMin: 120, price: 15000 },
+  { name: 'Blowout & Styling', category: 'Hair', durationMin: 45, price: 5000 },
+  // Nails
+  { name: 'Manicure', category: 'Nails', durationMin: 30, price: 3000 },
+  { name: 'Gel Manicure', category: 'Nails', durationMin: 45, price: 4500 },
+  { name: 'Pedicure', category: 'Nails', durationMin: 45, price: 4000 },
+  // Spa
+  { name: 'Signature Facial', category: 'Spa', durationMin: 60, price: 7000 },
+  { name: 'Hot Stone Massage', category: 'Spa', durationMin: 75, price: 9500 },
+  { name: 'Aromatherapy Massage', category: 'Spa', durationMin: 60, price: 8500 },
+  // Makeup
+  { name: 'Bridal Makeup', category: 'Makeup', durationMin: 90, price: 18000 },
+  { name: 'Bridal Makeup Trial', category: 'Makeup', durationMin: 60, price: 9000 },
+  { name: 'Groom Makeup & Grooming', category: 'Makeup', durationMin: 60, price: 10000 },
+  { name: 'Party / Event Makeup', category: 'Makeup', durationMin: 60, price: 8000 },
+  // Packages
+  { name: 'Bridal Package – Classic', category: 'Packages', durationMin: 180, price: 35000 },
+  { name: 'Bridal Package – Luxe', category: 'Packages', durationMin: 240, price: 52000 },
+  { name: 'Bride & Groom Package', category: 'Packages', durationMin: 240, price: 60000 },
+  { name: 'Spa Day Package', category: 'Packages', durationMin: 210, price: 28000 },
+  { name: 'Pamper Package (Mani + Facial)', category: 'Packages', durationMin: 90, price: 9000 },
 ];
 
 export const SEED_FAQS = [
@@ -32,6 +51,11 @@ export const SEED_FAQS = [
   {
     topic: 'payment',
     answer: 'We accept cash and all major debit and credit cards.',
+  },
+  {
+    topic: 'packages',
+    answer:
+      'We offer bundles: Bridal Package (Classic and Luxe), a Spa Day Package, a Cut & Color Combo, and a Pamper Package combining a manicure and facial. Ask and I can run through the prices.',
   },
 ];
 
@@ -65,7 +89,7 @@ export function seedBookings(base = new Date()) {
       durationMin: 90,
     },
     {
-      serviceName: 'Facial',
+      serviceName: 'Signature Facial',
       customerName: 'Aisha Khan',
       contact: '+15559876543',
       startTime: friFacialStart,

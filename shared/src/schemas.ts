@@ -122,6 +122,7 @@ export const ServiceInfoSchema = z.object({
   name: z.string(),
   durationMin: z.number(),
   price: z.number(), // minor units (cents)
+  category: z.string().optional(),
 });
 export type ServiceInfo = z.infer<typeof ServiceInfoSchema>;
 
