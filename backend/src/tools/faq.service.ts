@@ -36,15 +36,53 @@ export class FaqService {
   ): Promise<LookupServicesOutput> {
     const q = input.query.trim().toLowerCase();
     const all = await this.prisma.service.findMany();
-    // Empty query → list all; otherwise match on name OR category so "spa",
-    // "makeup", "bridal", "groom" all work. Empty if no match.
-    const matched = q
-      ? all.filter(
-          (s) =>
-            s.name.toLowerCase().includes(q) ||
-            s.category.toLowerCase().includes(q),
-        )
+
+    // Drop filler words so natural-language queries ("all your services",
+    // "what do you offer") don't break matching.
+    const STOP = new Set([
+      'all',
+      'service',
+      'services',
+      'list',
+      'menu',
+      'everything',
+      'offer',
+      'offered',
+      'available',
+      'your',
+      'you',
+      'do',
+      'have',
+      'the',
+      'a',
+      'an',
+      'me',
+      'show',
+      'tell',
+      'about',
+      'what',
+      'and',
+      'or',
+      'of',
+      'for',
+      'price',
+      'prices',
+      'pricing',
+      'cost',
+      'costs',
+    ]);
+    const tokens = q.split(/[^a-z0-9]+/).filter((t) => t && !STOP.has(t));
+
+    // No meaningful tokens (generic "list all services") → return everything.
+    // Otherwise keep services matching ANY token on name or category. A genuine
+    // no-match (e.g. "tattoo") stays empty so the agent says we don't offer it.
+    const matched = tokens.length
+      ? all.filter((s) => {
+          const hay = `${s.name} ${s.category}`.toLowerCase();
+          return tokens.some((t) => hay.includes(t));
+        })
       : all;
+
     const services = matched.map((s) => ({
       name: s.name,
       durationMin: s.durationMin,
