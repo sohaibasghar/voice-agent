@@ -1,98 +1,163 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Voice Front-Desk Agent
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A real-time voice agent that acts as the front desk for an appointment-based
+business (default preset: a beauty salon). A caller speaks to the agent in
+natural language to check availability, book, reschedule, or cancel
+appointments, ask FAQs, and request a human callback. Destructive actions are
+gated by authoritative guardrails plus human-in-the-loop approval.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Architecture
 
-## Description
+The [OpenAI Agents SDK](https://github.com/openai/openai-agents-js) runs
+**server-side**. NestJS hosts the `RealtimeSession`, the three `RealtimeAgent`s
+(FrontDesk ⇄ Services ⇄ Escalation via handoffs), the tools, the output
+guardrail, and tool-approval flow. The browser is a **thin client**: it captures
+mic audio (PCM16 @ 24 kHz), streams it to the `/voice` Socket.IO gateway, plays
+back the agent's audio, and renders the trace + approval UI.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ npm install
+```
+Browser (Next.js)                     NestJS backend
+┌──────────────────────┐  Socket.IO  ┌───────────────────────────────────┐
+│ mic → PCM16 capture   │ ──/voice──▶ │ VoiceGateway → RealtimeSession     │
+│ agent audio playback  │ ◀────────── │   ├─ RealtimeAgents (handoffs)     │
+│ trace + approval UI    │  /session  │   ├─ tools (injected providers)    │   OpenAI
+└──────────────────────┘             │   ├─ output guardrail              │ ◀─ Realtime
+                                       │   └─ HITL tool approvals           │     API
+                                       │ Prisma ──▶ PostgreSQL (calendar)   │
+                                       └───────────────────────────────────┘
 ```
 
-## Compile and run the project
+- **API key stays server-side** — never shipped to the browser.
+- **Tools** are injectable NestJS providers with Zod-typed I/O.
+- **Guardrails** (no-double-book, confirm-before-destructive) enforced
+  authoritatively in the providers; destructive tools also require human
+  approval.
+- **Audio transport is isolated** behind the `/voice` gateway so Twilio Media
+  Streams can replace the browser channel later without touching
+  agents/tools/guardrails/data.
 
-```bash
-# development
-$ npm run start
+See `specs/001-voice-front-desk-agent/plan.md` for the full design and
+`docs/` for additional notes.
 
-# watch mode
-$ npm run start:dev
+## Stack
 
-# production mode
-$ npm run start:prod
+| Layer    | Tech                                                                 |
+| -------- | -------------------------------------------------------------------- |
+| Backend  | TypeScript · NestJS 11 · OpenAI Agents SDK (realtime, WebSocket)     |
+| Frontend | Next.js (App Router) · shadcn/ui · Tailwind                          |
+| Shared   | `voice-agent-shared` — Zod schemas + types used by both sides        |
+| Data     | Prisma · PostgreSQL                                                   |
+
+This is an npm **workspaces** monorepo:
+
+```
+backend/   NestJS app (realtime session, gateways, tools, Prisma)
+frontend/  Next.js thin client (voice capture/playback, trace + approvals)
+shared/    voice-agent-shared — Zod schemas + types (built to dist/)
+specs/     Spec Kit feature spec, plan, research, data model
 ```
 
-## Run tests
+## Prerequisites
+
+- Node.js LTS + npm
+- PostgreSQL 16 (`brew install postgresql@16`)
+- An OpenAI API key with Realtime access
+
+## Setup
 
 ```bash
-# unit tests
-$ npm run test
+# 1. Install all workspaces (auto-builds shared/dist via its prepare script)
+npm install
 
-# e2e tests
-$ npm run test:e2e
+# 2. Start PostgreSQL and create the database
+brew services start postgresql@16
+createdb voice_agent
 
-# test coverage
-$ npm run test:cov
+# 3. Configure backend env
+cp .env.example backend/.env
+#   then edit backend/.env:
+#     OPENAI_API_KEY=sk-...
+#     DATABASE_URL=postgresql://<user>@localhost:5432/voice_agent
+
+# 4. Configure frontend env (optional — defaults to http://localhost:3000)
+cp frontend/.env.example frontend/.env.local
+
+# 5. Init schema + seed demo data (services, FAQs, sample bookings)
+npm run db:migrate
+npm run db:seed
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Running
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Backend (http://localhost:3000) — also rebuilds shared first
+npm run backend:dev
+
+# Frontend (http://localhost:3001) — in a second terminal
+npm run frontend:dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Open http://localhost:3001 and start talking to the agent.
 
-## Resources
+> The root `npm run dev` starts both, but separate terminals give cleaner logs.
 
-Check out a few resources that may come in handy when working with NestJS:
+## Root scripts
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+| Script                     | What it does                                        |
+| -------------------------- | --------------------------------------------------- |
+| `npm run dev`              | Build shared, then run backend + frontend           |
+| `npm run shared:build`     | Build `shared/dist` (Zod schemas + types)           |
+| `npm run backend:dev`      | Build shared, then NestJS watch mode on `:3000`     |
+| `npm run backend:build`    | Build shared, then `nest build`                     |
+| `npm run frontend:dev`     | Next.js dev server on `:3001`                        |
+| `npm run db:generate`      | `prisma generate`                                   |
+| `npm run db:migrate`       | `prisma migrate dev`                                |
+| `npm run db:seed`          | Seed demo services, FAQs, bookings                   |
+| `npm run -w @voice-agent/backend test` | Backend unit + integration tests       |
 
-## Support
+## Environment variables
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+**`backend/.env`**
 
-## Stay in touch
+| Var               | Example                                          | Notes                          |
+| ----------------- | ------------------------------------------------ | ------------------------------ |
+| `OPENAI_API_KEY`  | `sk-...`                                          | Server-side only              |
+| `DATABASE_URL`    | `postgresql://you@localhost:5432/voice_agent`    | PostgreSQL connection          |
+| `DOMAIN_PRESET`   | `beauty-salon`                                    | Preset in `src/domain/presets/`|
+| `MODEL_TIER`      | `dev` \| `live`                                   | dev = cheaper/faster model     |
+| `PORT`            | `3000`                                            | Backend HTTP/Socket.IO port    |
+| `BUSINESS_HOURS`  | `09:00-18:00`                                     | Drives availability            |
+| `BUSINESS_DAYS`   | `Mon,Tue,Wed,Thu,Fri,Sat`                         |                                |
+| `SLOT_STEP_MIN`   | `15`                                              | Availability slot granularity  |
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+**`frontend/.env.local`**
 
-## License
+| Var                       | Example                  |
+| ------------------------- | ------------------------ |
+| `NEXT_PUBLIC_BACKEND_URL` | `http://localhost:3000`  |
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## The `shared` package
+
+`voice-agent-shared` holds the Zod schemas and types shared between backend and
+frontend. Both consume its compiled output (`shared/dist`), which is **git-ignored**.
+A `prepare` script builds `dist` automatically on `npm install`, so a fresh
+checkout works out of the box.
+
+If you edit files in `shared/src`, rebuild so consumers pick up the change:
+
+```bash
+npm run shared:build          # one-off
+npm run dev -w voice-agent-shared   # watch mode while developing
+```
+
+Note: backend's `nest start --watch` does **not** rebuild shared on its own — run
+the shared build (or use `npm run backend:dev`, which does it once at startup).
+
+## Troubleshooting
+
+- **`Cannot find module 'voice-agent-shared'`** — `shared/dist` isn't built. Run
+  `npm install` (triggers `prepare`) or `npm run shared:build`.
+- **`PrismaClientInitializationError ... URL must start with file:`** — the
+  generated Prisma client is stale (built for a different provider). Run
+  `npm run db:generate`.
+- **`EADDRINUSE :::3000`** — a backend is already running. `pkill -f "nest start"`.
