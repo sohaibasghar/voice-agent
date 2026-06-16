@@ -102,6 +102,16 @@ export class VoiceGateway implements OnGatewayDisconnect {
     });
     session.on('audio_interrupted', () => client.emit('interrupted'));
 
+    // Track whether a model response is currently in flight. The Realtime API
+    // rejects a second response.create while one is active, which garbles
+    // handoff/greeting audio — so we only ever nudge when truly idle.
+    let responseActive = false;
+    session.on('transport_event', (evt) => {
+      const t = (evt as { type?: string })?.type;
+      if (t === 'response.created') responseActive = true;
+      else if (t === 'response.done') responseActive = false;
+    });
+
     // Active-agent tracking for the real-time handoff UI.
     const emitActive = (name?: string) =>
       client.emit('active_agent', { name: name ?? 'FrontDeskAgent' });
@@ -124,18 +134,20 @@ export class VoiceGateway implements OnGatewayDisconnect {
         detail: to?.name,
       });
       emitActive(to?.name);
-      // After a transfer the SDK auto-requests a response, but if the new agent
-      // stays silent (slow/dropped), nudge it so it always greets/continues.
+      // After a transfer the SDK auto-requests a response. Only nudge if, after
+      // a grace period, the new agent produced NOTHING (no active response, no
+      // audio) — e.g. it did a silent tool call. Never nudge while a response is
+      // active, or the competing response.create overlaps/garbles the speech.
       audioSeen = false;
       setTimeout(() => {
-        if (!audioSeen && this.conns.has(client.id)) {
+        if (this.conns.has(client.id) && !audioSeen && !responseActive) {
           try {
             session.transport.sendEvent({ type: 'response.create' });
           } catch (e) {
             this.logger.warn(`post-handoff nudge failed: ${String(e)}`);
           }
         }
-      }, 1500);
+      }, 2500);
     });
     session.on('guardrail_tripped', (_c, _a, details) =>
       relay('guardrail_trip', 'stay_in_domain', {
@@ -170,6 +182,7 @@ export class VoiceGateway implements OnGatewayDisconnect {
       // caller (per the FrontDeskAgent instructions) without waiting for speech.
       // Fire-and-forget after a short settle so it never blocks/breaks the ack.
       setTimeout(() => {
+        if (responseActive) return; // SDK already started one — don't double up
         try {
           session.transport.sendEvent({ type: 'response.create' });
         } catch (e) {
