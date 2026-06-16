@@ -41,7 +41,7 @@ export class BookingService {
           b.customerName.trim().toLowerCase() === name &&
           normalizePhone(b.contact) === contact,
       )
-      .map((b) => toBookingView(b, b.service.name));
+      .map((b) => toBookingView(b, b.service.name, this.calendar.businessTz()));
     return { matches };
   }
 
@@ -79,7 +79,7 @@ export class BookingService {
     });
     return {
       bookingId: booking.id,
-      booking: toBookingView(booking, service.name),
+      booking: toBookingView(booking, service.name, this.calendar.businessTz()),
     };
   }
 
@@ -125,7 +125,13 @@ export class BookingService {
       where: { id: existing.id },
       data: { startTime: start, endTime: end },
     });
-    return { booking: toBookingView(updated, existing.service.name) };
+    return {
+      booking: toBookingView(
+        updated,
+        existing.service.name,
+        this.calendar.businessTz(),
+      ),
+    };
   }
 
   /** cancelBooking (FR-008, FR-009) — confirm-gated. */
@@ -147,7 +153,13 @@ export class BookingService {
       where: { id: existing.id },
       data: { status: 'cancelled' },
     });
-    return { booking: toBookingView(updated, existing.service.name) };
+    return {
+      booking: toBookingView(
+        updated,
+        existing.service.name,
+        this.calendar.businessTz(),
+      ),
+    };
   }
 }
 

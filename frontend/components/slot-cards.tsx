@@ -40,7 +40,7 @@ export function SlotCards() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="font-display text-xl font-semibold text-foreground">{booking.serviceName}</p>
-              <p className="mt-0.5 font-mono text-sm text-primary">{fmt(booking.startTime)}</p>
+              <p className="mt-0.5 font-mono text-sm text-primary">{booking.label ?? fmt(booking.startTime)}</p>
               <p className="mt-0.5 text-sm text-muted-foreground">{booking.customerName} · {booking.contact}</p>
             </div>
             <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 font-mono text-[10px] font-medium uppercase tracking-wide text-emerald-400">
@@ -58,7 +58,7 @@ export function SlotCards() {
                 key={s.startTime}
                 className="rounded border border-border bg-secondary px-3 py-1.5 font-mono text-[11px] text-muted-foreground hover:border-primary/30 hover:text-primary transition-colors"
               >
-                {fmt(s.startTime)}
+                {s.label ?? fmt(s.startTime)}
               </span>
             ))}
           </div>

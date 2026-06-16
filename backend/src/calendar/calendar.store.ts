@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { formatLocal, resolveBusinessTz } from '../common/time';
 import type { Slot } from 'voice-agent-shared';
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -43,6 +44,11 @@ export class CalendarStore {
 
   private stepMin(): number {
     return Number(this.config.get<string>('SLOT_STEP_MIN', '15'));
+  }
+
+  /** IANA business timezone for human-facing time labels (BUSINESS_TZ). */
+  businessTz(): string {
+    return resolveBusinessTz(this.config.get<string>('BUSINESS_TZ'));
   }
 
   isBusinessDay(date: Date): boolean {
@@ -96,6 +102,7 @@ export class CalendarStore {
     const { startMin, endMin } = this.hours();
     const step = this.stepMin();
     const booked = await this.confirmedBookingsOn(day);
+    const tz = this.businessTz();
 
     const slots: Slot[] = [];
     for (let m = startMin; m + durationMin <= endMin; m += step) {
@@ -109,6 +116,7 @@ export class CalendarStore {
         slots.push({
           startTime: start.toISOString(),
           endTime: end.toISOString(),
+          label: formatLocal(start, tz),
         });
       }
     }

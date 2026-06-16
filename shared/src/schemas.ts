@@ -23,8 +23,11 @@ export const Phone = z
   .regex(/^[+]?[\d\s().-]{7,20}$/, 'contact must be a phone number');
 
 export const SlotSchema = z.object({
-  startTime: z.string(), // ISO-8601
+  startTime: z.string(), // ISO-8601 (UTC, machine-precise)
   endTime: z.string(),
+  // Human-readable local time in the business timezone (e.g. "Tue, Jun 16, 9:00 AM").
+  // Agents must speak this, never the raw ISO/UTC value.
+  label: z.string().optional(),
   staffId: z.string().optional(),
 });
 export type Slot = z.infer<typeof SlotSchema>;
@@ -34,6 +37,8 @@ export const BookingViewSchema = z.object({
   serviceName: z.string(),
   startTime: z.string(),
   endTime: z.string(),
+  // Human-readable local time in the business timezone; agents speak this.
+  label: z.string().optional(),
   customerName: z.string(),
   contact: z.string(),
   status: BookingStatus,

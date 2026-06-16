@@ -1,4 +1,5 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { formatLocal } from '../common/time';
 import type { BookingView } from 'voice-agent-shared';
 
 /** Case-insensitive service lookup by name (small catalog → match in memory). */
@@ -23,12 +24,14 @@ export function toBookingView(
     status: string;
   },
   serviceName: string,
+  timeZone: string,
 ): BookingView {
   return {
     id: booking.id,
     serviceName,
     startTime: booking.startTime.toISOString(),
     endTime: booking.endTime.toISOString(),
+    label: formatLocal(booking.startTime, timeZone),
     customerName: booking.customerName,
     contact: booking.contact,
     status: booking.status as BookingView['status'],
