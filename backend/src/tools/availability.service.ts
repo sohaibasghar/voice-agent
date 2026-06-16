@@ -4,7 +4,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ToolError } from '../common/tool-error';
 import { findServiceByName } from './service-lookup';
 import { DOMAIN_CONFIG, type DomainConfig } from '../domain/domain.config';
-import type { CheckAvailabilityInput, CheckAvailabilityOutput, Slot } from 'voice-agent-shared';
+import type {
+  CheckAvailabilityInput,
+  CheckAvailabilityOutput,
+  Slot,
+} from 'voice-agent-shared';
 
 /** checkAvailability (FR-003) — returns open slots from the calendar store. */
 @Injectable()
@@ -15,10 +19,15 @@ export class AvailabilityService {
     @Inject(DOMAIN_CONFIG) private readonly domain: DomainConfig,
   ) {}
 
-  async checkAvailability(input: CheckAvailabilityInput): Promise<CheckAvailabilityOutput> {
+  async checkAvailability(
+    input: CheckAvailabilityInput,
+  ): Promise<CheckAvailabilityOutput> {
     const service = await findServiceByName(this.prisma, input.service);
     if (!service) {
-      throw new ToolError('service_not_found', `No service named "${input.service}"`);
+      throw new ToolError(
+        'service_not_found',
+        `No service named "${input.service}"`,
+      );
     }
 
     let slots = await this.calendar.openSlots(input.date, service.durationMin);

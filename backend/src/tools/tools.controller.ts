@@ -50,7 +50,9 @@ export class ToolsController {
   }
 
   @Post('lookupBooking')
-  lookupBooking(@Body(new ZodBody(LookupBookingInput)) body: TLookupBookingInput) {
+  lookupBooking(
+    @Body(new ZodBody(LookupBookingInput)) body: TLookupBookingInput,
+  ) {
     return this.booking.lookupBooking(body);
   }
 
@@ -67,7 +69,9 @@ export class ToolsController {
   }
 
   @Post('cancelBooking')
-  cancelBooking(@Body(new ZodBody(CancelBookingInput)) body: TCancelBookingInput) {
+  cancelBooking(
+    @Body(new ZodBody(CancelBookingInput)) body: TCancelBookingInput,
+  ) {
     return this.booking.cancelBooking(body);
   }
 

@@ -12,7 +12,9 @@ export class CatalogController {
   ) {}
 
   @Get()
-  async catalog(): Promise<{ categories: { name: string; services: ServiceInfo[] }[] }> {
+  async catalog(): Promise<{
+    categories: { name: string; services: ServiceInfo[] }[];
+  }> {
     const { services } = await this.faq.lookupServices({ query: '' });
     const { categoryOrder } = this.domain;
 
@@ -24,7 +26,11 @@ export class CatalogController {
     }
 
     const categories = [...byCat.keys()]
-      .sort((a, b) => (categoryOrder.indexOf(a) + 1 || 99) - (categoryOrder.indexOf(b) + 1 || 99))
+      .sort(
+        (a, b) =>
+          (categoryOrder.indexOf(a) + 1 || 99) -
+          (categoryOrder.indexOf(b) + 1 || 99),
+      )
       .map((name) => ({ name, services: byCat.get(name)! }));
 
     return { categories };
