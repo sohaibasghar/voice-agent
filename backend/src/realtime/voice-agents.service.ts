@@ -21,7 +21,9 @@ import { FaqService } from '../tools/faq.service';
 import { ToolError } from '../common/tool-error';
 
 /** Wrap a provider result/error into the string the SDK tool contract expects. */
-async function asToolResult(fn: () => unknown | Promise<unknown>): Promise<string> {
+async function asToolResult(
+  fn: () => unknown | Promise<unknown>,
+): Promise<string> {
   try {
     return JSON.stringify(await fn());
   } catch (err) {
@@ -55,7 +57,8 @@ export class VoiceAgentsService {
       name: 'stay_in_domain',
       policyHint,
       execute: ({ agentOutput }) => {
-        const text = typeof agentOutput === 'string' ? agentOutput.toLowerCase() : '';
+        const text =
+          typeof agentOutput === 'string' ? agentOutput.toLowerCase() : '';
         return Promise.resolve({
           tripwireTriggered: offTopicKeywords.some((w) => text.includes(w)),
           outputInfo: {},
@@ -73,7 +76,8 @@ export class VoiceAgentsService {
       description:
         'Find open appointment slots for a service on a date (YYYY-MM-DD), optionally narrowed to morning/afternoon/evening. Returns real open slots only.',
       parameters: CheckAvailabilityInput,
-      execute: (input) => asToolResult(() => this.availability.checkAvailability(input)),
+      execute: (input) =>
+        asToolResult(() => this.availability.checkAvailability(input)),
     });
 
     const bookSlotTool = tool({
@@ -86,9 +90,11 @@ export class VoiceAgentsService {
 
     const sendConfirmationTool = tool({
       name: 'sendConfirmation',
-      description: 'Send a (mocked) WhatsApp/SMS confirmation for a booking to the phone number.',
+      description:
+        'Send a (mocked) WhatsApp/SMS confirmation for a booking to the phone number.',
       parameters: SendConfirmationInput,
-      execute: (input) => asToolResult(() => this.confirmation.sendConfirmation(input)),
+      execute: (input) =>
+        asToolResult(() => this.confirmation.sendConfirmation(input)),
     });
 
     const lookupBookingTool = tool({
@@ -103,20 +109,26 @@ export class VoiceAgentsService {
     // the SDK runs execute (only after session.approve()).
     const rescheduleBookingTool = tool({
       name: 'rescheduleBooking',
-      description: 'Move a booking to a new ISO start time. Requires human approval; the new slot must be free.',
+      description:
+        'Move a booking to a new ISO start time. Requires human approval; the new slot must be free.',
       parameters: RescheduleBookingInput.omit({ confirmed: true }),
       needsApproval: true,
       execute: (input) =>
-        asToolResult(() => this.booking.rescheduleBooking({ ...input, confirmed: true })),
+        asToolResult(() =>
+          this.booking.rescheduleBooking({ ...input, confirmed: true }),
+        ),
     });
 
     const cancelBookingTool = tool({
       name: 'cancelBooking',
-      description: 'Cancel a booking. Requires human approval before it takes effect.',
+      description:
+        'Cancel a booking. Requires human approval before it takes effect.',
       parameters: CancelBookingInput.omit({ confirmed: true }),
       needsApproval: true,
       execute: (input) =>
-        asToolResult(() => this.booking.cancelBooking({ ...input, confirmed: true })),
+        asToolResult(() =>
+          this.booking.cancelBooking({ ...input, confirmed: true }),
+        ),
     });
 
     const lookupFaqTool = tool({
@@ -137,7 +149,8 @@ export class VoiceAgentsService {
 
     const logCallbackTool = tool({
       name: 'logCallback',
-      description: 'Log a request for a human to call the caller back (name, phone, reason).',
+      description:
+        'Log a request for a human to call the caller back (name, phone, reason).',
       parameters: LogCallbackInput,
       execute: (input) => asToolResult(() => this.callback.logCallback(input)),
     });
@@ -170,6 +183,10 @@ export class VoiceAgentsService {
         lookupBookingTool,
         rescheduleBookingTool,
         cancelBookingTool,
+        // Read-only lookups on the front desk too, so service/pricing/FAQ
+        // questions are always answered directly without depending on a handoff.
+        lookupServicesTool,
+        lookupFaqTool,
       ],
       handoffs: [servicesAgent, escalationAgent],
     });
